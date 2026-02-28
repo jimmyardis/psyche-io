@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Unified Cosmic Psyche v5: 3D Quantum Orbits</title>
+    <title>The Unified Cosmic Psyche v6: 3D Camera Controls</title>
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -15,7 +15,6 @@
         .tab-btn { padding: 0.5rem 1rem; border-bottom: 2px solid transparent; transition: all 0.2s; cursor: pointer; color: #94a3b8; }
         .tab-btn.active { border-bottom-color: #6366f1; color: white; }
         
-        /* Cosmic Macros */
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .accretion-disk { animation: spin-slow 4s linear infinite; }
         
@@ -25,7 +24,6 @@
             to { transform: rotateZ(360deg); }
         }
         
-        /* Counter-rotate the label so it doesn't spin upside down in 3D space */
         @keyframes counter-rotate {
             from { transform: rotateZ(360deg) rotateX(-90deg); }
             to { transform: rotateZ(0deg) rotateX(-90deg); }
@@ -45,6 +43,11 @@
             border-radius: 50%;
             transform-style: preserve-3d;
         }
+
+        /* 3D Sphere styling for the core nodes */
+        .sphere-node {
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.2);
+        }
     </style>
 </head>
 <body>
@@ -54,25 +57,23 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // --- DATA ARCHITECTURE ---
         const systemData = {
-            blackHoles: [{ id: 'bh1', name: 'The Void (Addiction Singularity)', x: window.innerWidth - 200, y: window.innerHeight - 200, radius: 60, color: '#1e1b4b', eventHorizon: 100 }],
-            wormholes: [{ id: 'w1', name: 'Instant Gratification', inX: 200, inY: window.innerHeight - 150, outX: window.innerWidth - 300, outY: window.innerHeight - 250, color: '#22d3ee' }],
-            memeplexes: [{ id: 'm1', name: 'Spiritual/Meaning Framework', x: 250, y: 200, color: '#fcd34d', radius: 180 }],
+            blackHoles: [{ id: 'bh1', name: 'The Void (Addiction)', x: window.innerWidth/2 + 300, y: window.innerHeight/2 + 250, radius: 60, color: '#1e1b4b', eventHorizon: 100 }],
+            memeplexes: [{ id: 'm1', name: 'Spiritual/Meaning Framework', x: window.innerWidth/2 - 300, y: window.innerHeight/2 - 200, color: '#fcd34d', radius: 180 }],
             
             parts: [
                 { id: 'p0', name: 'THE SELF', x: window.innerWidth/2, y: window.innerHeight/2, vx: 0, vy: 0, color: '#ffffff', isSelf: true, satellites: [] },
-                { id: 'p1', name: 'The Manager', x: window.innerWidth/2, y: window.innerHeight/2 - 150, vx: 0, vy: 0, color: '#60a5fa', satellites: ['Scheduling Part', 'Control Part', 'Future-Casting', 'Anxiety Part', 'To-Do Lists', 'Fixing Part'] },
-                { id: 'p2', name: 'The Critic', x: window.innerWidth/2 + 130, y: window.innerHeight/2 - 75, vx: 0, vy: 0, color: '#f472b6', satellites: ['Self-Doubt Part', 'Comparison', 'Shaming Part', 'Perfectionism', 'Guilt Trip', 'Evaluation'] },
-                { id: 'p3', name: 'The Seeker', x: window.innerWidth/2 + 130, y: window.innerHeight/2 + 75, vx: 0, vy: 0, color: '#4ade80', satellites: ['Craving Part', 'Impulse Buying', 'Dopamine Hunt', 'Restlessness', 'Bargaining', 'Tunnel Vision'] },
-                { id: 'p4', name: 'The Firefighter', x: window.innerWidth/2, y: window.innerHeight/2 + 150, vx: 0, vy: 0, color: '#f87171', satellites: ['Numbing Part', 'Dissociation', 'Bingeing Part', 'Distraction', 'Escapism', 'Urgency Part'] },
-                { id: 'p5', name: 'The Exile', x: window.innerWidth/2 - 130, y: window.innerHeight/2 + 75, vx: 0, vy: 0, color: '#a78bfa', satellites: ['Fear Part', 'Worthlessness', 'Tears', 'Isolation Part', 'Flashbacks', 'Despair Part'] },
-                { id: 'p6', name: 'The Mystic', x: window.innerWidth/2 - 130, y: window.innerHeight/2 - 75, vx: 0, vy: 0, color: '#fb923c', satellites: ['Awe Part', 'Connection', 'Artistic Part', 'Meaning-Making', 'Flow State', 'Intuition Part'] }
+                { id: 'p1', name: 'The Manager', x: window.innerWidth/2, y: window.innerHeight/2 - 150, vx: 0, vy: 0, color: '#60a5fa', satellites: ['Scheduling', 'Control', 'Future-Casting', 'Anxiety', 'To-Do Lists', 'Fixing'] },
+                { id: 'p2', name: 'The Critic', x: window.innerWidth/2 + 130, y: window.innerHeight/2 - 75, vx: 0, vy: 0, color: '#f472b6', satellites: ['Self-Doubt', 'Comparison', 'Shaming', 'Perfectionism', 'Guilt Trip', 'Evaluation'] },
+                { id: 'p3', name: 'The Seeker', x: window.innerWidth/2 + 130, y: window.innerHeight/2 + 75, vx: 0, vy: 0, color: '#4ade80', satellites: ['Craving', 'Impulse Buying', 'Dopamine', 'Restlessness', 'Bargaining', 'Tunnel Vision'] },
+                { id: 'p4', name: 'The Firefighter', x: window.innerWidth/2, y: window.innerHeight/2 + 150, vx: 0, vy: 0, color: '#f87171', satellites: ['Numbing', 'Dissociation', 'Bingeing', 'Distraction', 'Escapism', 'Urgency'] },
+                { id: 'p5', name: 'The Exile', x: window.innerWidth/2 - 130, y: window.innerHeight/2 + 75, vx: 0, vy: 0, color: '#a78bfa', satellites: ['Fear', 'Worthlessness', 'Tears', 'Isolation', 'Flashbacks', 'Despair'] },
+                { id: 'p6', name: 'The Mystic', x: window.innerWidth/2 - 130, y: window.innerHeight/2 - 75, vx: 0, vy: 0, color: '#fb923c', satellites: ['Awe', 'Connection', 'Artistic', 'Meaning', 'Flow State', 'Intuition'] }
             ],
             
             spokeDist: 180,
             rimDist: 180,
-            orbitRadius: 110, // Wider for 3D rings
+            orbitRadius: 100, 
             springLinks: [
                 { source: 'p0', target: 'p1', type: 'spoke' }, { source: 'p0', target: 'p2', type: 'spoke' },
                 { source: 'p0', target: 'p3', type: 'spoke' }, { source: 'p0', target: 'p4', type: 'spoke' },
@@ -85,15 +86,25 @@
 
         const CosmicCanvas = () => {
             const [parts, setParts] = useState(systemData.parts);
+            
+            // --- 3D CAMERA STATE ---
+            // Start tilted so the 3D effect is immediately obvious
+            const [camera, setCamera] = useState({ rotX: 60, rotY: -20, zoom: 0.8 });
+            const [isPanning, setIsPanning] = useState(false);
+            const cameraRef = useRef(camera);
+            
+            useEffect(() => { cameraRef.current = camera; }, [camera]);
+
             const requestRef = useRef();
 
+            // PHYSICS ENGINE
             const updatePhysics = () => {
                 setParts(currentParts => {
                     return currentParts.map(part => {
                         if (part.isDragging) return part;
                         let { x, y, vx, vy } = part;
 
-                        // 1. SPRING PHYSICS
+                        // Springs
                         systemData.springLinks.forEach(link => {
                             let other = null;
                             if (link.source === part.id) other = currentParts.find(p => p.id === link.target);
@@ -104,38 +115,33 @@
                                 const dy = other.y - y;
                                 const dist = Math.sqrt(dx*dx + dy*dy);
                                 const targetDist = link.type === 'spoke' ? systemData.spokeDist : systemData.rimDist;
-                                
                                 if (dist > 0) {
-                                    const diff = dist - targetDist;
-                                    const force = diff * 0.003;
+                                    const force = (dist - targetDist) * 0.003;
                                     vx += (dx / dist) * force;
                                     vy += (dy / dist) * force;
                                 }
                             }
                         });
 
-                        // 2. BLACK HOLE GRAVITY
+                        // Black Holes
                         systemData.blackHoles.forEach(bh => {
                             const dx = bh.x - x; const dy = bh.y - y;
                             const dist = Math.sqrt(dx*dx + dy*dy);
                             if (dist < bh.eventHorizon) {
                                 vx += dx * 0.08; vy += dy * 0.08; 
                             } else if (dist < 400 && !part.isSelf) {
-                                const force = (dx * 0.8) / (dist * 0.05) * 0.0015;
-                                vx += force;
+                                vx += (dx * 0.8) / (dist * 0.05) * 0.0015;
                                 vy += (dy * 0.8) / (dist * 0.05) * 0.0015;
                             }
                         });
 
-                        // 3. CENTER ANCHOR
+                        // Center anchor
                         if (part.isSelf) {
-                            const cx = window.innerWidth / 2;
-                            const cy = window.innerHeight / 2;
-                            vx += (cx - x) * 0.05;
-                            vy += (cy - y) * 0.05;
+                            vx += (window.innerWidth / 2 - x) * 0.05;
+                            vy += (window.innerHeight / 2 - y) * 0.05;
                         }
 
-                        vx *= 0.92; vy *= 0.92;
+                        vx *= 0.92; vy *= 0.92; // Friction
                         return { ...part, x: x + vx, y: y + vy, vx, vy };
                     });
                 });
@@ -147,9 +153,43 @@
                 return () => cancelAnimationFrame(requestRef.current);
             }, []);
 
+            // --- CAMERA CONTROLS ---
+            const handleBackgroundDown = (e) => { setIsPanning(true); };
+            const handleGlobalUp = () => { setIsPanning(false); };
+            
+            const handleGlobalMove = (e) => {
+                if (isPanning) {
+                    setCamera(prev => ({
+                        ...prev,
+                        rotX: Math.max(-85, Math.min(85, prev.rotX - e.movementY * 0.5)),
+                        rotY: prev.rotY + e.movementX * 0.5
+                    }));
+                }
+            };
+
+            const handleWheel = (e) => {
+                setCamera(prev => ({
+                    ...prev,
+                    zoom: Math.max(0.3, Math.min(2.5, prev.zoom - e.deltaY * 0.002))
+                }));
+            };
+
+            // --- NODE DRAGGING (Adjusted for camera zoom) ---
             const handleDragStart = (id, e) => {
+                e.stopPropagation(); // Stop background from panning when dragging a node
                 setParts(prev => prev.map(p => p.id === id ? { ...p, isDragging: true } : p));
-                const handleMouseMove = (ev) => setParts(prev => prev.map(p => p.id === id ? { ...p, x: ev.clientX, y: ev.clientY, vx: 0, vy: 0 } : p));
+                
+                const handleMouseMove = (ev) => {
+                    setParts(prev => prev.map(p => {
+                        if (p.id === id) {
+                            // Divide by zoom so mouse movements feel 1-to-1 even when zoomed out
+                            const moveX = ev.movementX / cameraRef.current.zoom;
+                            const moveY = ev.movementY / cameraRef.current.zoom;
+                            return { ...p, x: p.x + moveX, y: p.y + moveY, vx: 0, vy: 0 };
+                        }
+                        return p;
+                    }));
+                };
                 const handleMouseUp = () => {
                     setParts(prev => prev.map(p => p.id === id ? { ...p, isDragging: false } : p));
                     window.removeEventListener('mousemove', handleMouseMove);
@@ -160,147 +200,138 @@
             };
 
             return (
-                <div className="relative w-full h-full overflow-hidden select-none">
-                    <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                        <rect width="100%" height="100%" fill="#020617" />
-                        
-                        {/* Background Entities */}
-                        {systemData.blackHoles.map(bh => (
-                            <g key={bh.id}>
-                                <circle cx={bh.x} cy={bh.y} r={bh.radius * 2} fill={`url(#grad-${bh.id})`} opacity="0.6" className="accretion-disk"/>
-                                <circle cx={bh.x} cy={bh.y} r={bh.radius} fill="black" stroke={bh.color} strokeWidth="2" />
-                                <defs><radialGradient id={`grad-${bh.id}`}><stop offset="30%" stopColor="black" /><stop offset="70%" stopColor={bh.color} /><stop offset="100%" stopColor="transparent" /></radialGradient></defs>
-                                <text x={bh.x} y={bh.y} textAnchor="middle" fill="white" fontSize="10" opacity="0.5">THE VOID</text>
-                            </g>
-                        ))}
+                <div className="relative w-full h-full overflow-hidden select-none bg-slate-950"
+                     onMouseDown={handleBackgroundDown}
+                     onMouseMove={handleGlobalMove}
+                     onMouseUp={handleGlobalUp}
+                     onMouseLeave={handleGlobalUp}
+                     onWheel={handleWheel}
+                     style={{ perspective: '2000px', cursor: isPanning ? 'grabbing' : 'grab' }}
+                >
+                    {/* UI Overlay */}
+                    <div className="absolute top-4 left-4 z-50 bg-black/50 p-4 rounded-xl border border-slate-800 backdrop-blur pointer-events-none">
+                        <p className="text-slate-300 text-sm mb-2">📸 <strong>Camera Controls</strong></p>
+                        <ul className="text-xs text-slate-500 space-y-1">
+                            <li>• Click & Drag background to Rotate</li>
+                            <li>• Scroll wheel to Zoom</li>
+                            <li>• Click & Drag nodes to move Parts</li>
+                        </ul>
+                    </div>
 
-                        {/* Macro-Spokes (Self to Parts & Part to Part) */}
-                        {systemData.springLinks.map((link, i) => {
-                            const s = parts.find(p => p.id === link.source);
-                            const t = parts.find(p => p.id === link.target);
-                            if (!s || !t) return null;
-                            const isSpoke = link.type === 'spoke';
-                            return <line key={`macro-${i}`} x1={s.x} y1={s.y} x2={t.x} y2={t.y} 
-                                stroke={isSpoke ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.1)"} 
-                                strokeWidth={isSpoke ? "2" : "1"} 
-                                strokeDasharray={isSpoke ? "none" : "5,5"} 
-                            />;
-                        })}
-                    </svg>
+                    {/* THE 3D SCENE CONTAINER */}
+                    <div className="w-full h-full absolute inset-0"
+                         style={{
+                             transform: `scale(${camera.zoom}) rotateX(${camera.rotX}deg) rotateY(${camera.rotY}deg)`,
+                             transformStyle: 'preserve-3d',
+                             transition: isPanning ? 'none' : 'transform 0.1s ease-out'
+                         }}
+                    >
+                        {/* The 2D Flat Plane (Springs, Black Holes) */}
+                        <svg className="absolute inset-0 w-full h-full overflow-visible" style={{ transformStyle: 'preserve-3d' }}>
+                            {systemData.blackHoles.map(bh => (
+                                <g key={bh.id}>
+                                    <circle cx={bh.x} cy={bh.y} r={bh.radius * 2} fill={`url(#grad-${bh.id})`} opacity="0.6" className="accretion-disk"/>
+                                    <circle cx={bh.x} cy={bh.y} r={bh.radius} fill="black" stroke={bh.color} strokeWidth="2" />
+                                    <defs><radialGradient id={`grad-${bh.id}`}><stop offset="30%" stopColor="black" /><stop offset="70%" stopColor={bh.color} /><stop offset="100%" stopColor="transparent" /></radialGradient></defs>
+                                </g>
+                            ))}
+                            {systemData.springLinks.map((link, i) => {
+                                const s = parts.find(p => p.id === link.source);
+                                const t = parts.find(p => p.id === link.target);
+                                if (!s || !t) return null;
+                                const isSpoke = link.type === 'spoke';
+                                return <line key={i} x1={s.x} y1={s.y} x2={t.x} y2={t.y} 
+                                    stroke={isSpoke ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.15)"} 
+                                    strokeWidth={isSpoke ? "3" : "1"} 
+                                    strokeDasharray={isSpoke ? "none" : "5,5"} 
+                                />;
+                            })}
+                        </svg>
 
-                    {/* Nodes (Parts & Self) */}
-                    {parts.map(part => {
-                        return (
-                            <div key={part.id} 
-                                onMouseDown={(e) => handleDragStart(part.id, e)}
-                                className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing ${part.isSelf ? 'z-30' : 'z-20'}`}
-                                style={{ 
-                                    left: part.x, top: part.y,
-                                    perspective: '1000px', // Creates the 3D depth field for this specific node
-                                    transformStyle: 'preserve-3d'
-                                }}
-                            >
-                                {/* Core Nucleus */}
-                                <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.2)] z-20
-                                     ${part.isSelf ? 'w-16 h-16 bg-white shadow-[0_0_30px_rgba(255,255,255,0.8)]' : 'w-12 h-12'}`}
-                                     style={{ backgroundColor: part.color }}>
-                                     {part.isSelf && <div className="w-full h-full flex items-center justify-center text-black font-bold text-xs">SELF</div>}
-                                </div>
-                                
-                                {/* 3D Orbiting Rings & Satellites */}
-                                {!part.isSelf && part.satellites.map((meme, index) => {
-                                    // Calculate the tilt of the ring in 3D space. 6 satellites = 6 rings intersecting at the core.
-                                    const tilt = index * (180 / part.satellites.length); 
-                                    // Varying orbital speeds to make it look organic
-                                    const orbitDuration = 6 + (index % 3); 
+                        {/* The 3D Nodes */}
+                        {parts.map(part => {
+                            return (
+                                <div key={part.id} 
+                                    onMouseDown={(e) => handleDragStart(part.id, e)}
+                                    className="absolute"
+                                    style={{ 
+                                        left: part.x, top: part.y,
+                                        transformStyle: 'preserve-3d',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {/* 3D Sphere Core */}
+                                    <div className={`absolute transform -translate-x-1/2 -translate-y-1/2 rounded-full sphere-node z-20
+                                         ${part.isSelf ? 'w-20 h-20 bg-white' : 'w-12 h-12'}`}
+                                         style={{ 
+                                             backgroundColor: part.color,
+                                             // Billboarding the core slightly so shadows look consistent
+                                             transform: `translate(-50%, -50%) rotateX(${-camera.rotX}deg) rotateY(${-camera.rotY}deg)`
+                                         }}>
+                                    </div>
                                     
-                                    return (
-                                        <div key={index} className="orbit-ring" 
-                                            style={{ 
-                                                width: `${systemData.orbitRadius}px`, 
-                                                height: `${systemData.orbitRadius}px`,
-                                                marginTop: `-${systemData.orbitRadius/2}px`, 
-                                                marginLeft: `-${systemData.orbitRadius/2}px`,
-                                                transform: `rotateX(70deg) rotateY(${tilt}deg)` 
-                                            }}
-                                        >
-                                            {/* The Carrier dictates the spin around the ring */}
-                                            <div className="satellite-carrier" style={{ animation: `orbit-path ${orbitDuration}s linear infinite` }}>
-                                                
-                                                {/* The actual dot sitting on the edge of the ring */}
-                                                <div className="absolute top-0 left-1/2 w-4 h-4 -ml-2 -mt-2 bg-slate-900 border border-slate-400 rounded-full flex items-center justify-center group shadow-lg"
-                                                     style={{ transformStyle: 'preserve-3d' }}>
-                                                    
-                                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: part.color, opacity: 0.8 }}></div>
-                                                    
-                                                    {/* The Label counter-rotates so it stays readable while orbiting in 3D */}
-                                                    <div className="hidden group-hover:block absolute -top-8 text-[10px] bg-black/90 text-white px-2 py-0.5 rounded whitespace-nowrap z-50 border border-slate-700"
-                                                         style={{ animation: `counter-rotate ${orbitDuration}s linear infinite` }}>
-                                                        {meme}
+                                    {/* Orbiting Quantum Rings */}
+                                    {!part.isSelf && part.satellites.map((meme, index) => {
+                                        const tiltY = index * (180 / part.satellites.length); 
+                                        const orbitDuration = 8 + (index % 3); 
+                                        
+                                        return (
+                                            <div key={index} className="orbit-ring" 
+                                                style={{ 
+                                                    width: `${systemData.orbitRadius * 2}px`, 
+                                                    height: `${systemData.orbitRadius * 2}px`,
+                                                    marginTop: `-${systemData.orbitRadius}px`, 
+                                                    marginLeft: `-${systemData.orbitRadius}px`,
+                                                    // This creates the spherical atom look
+                                                    transform: `rotateX(70deg) rotateY(${tiltY}deg)` 
+                                                }}
+                                            >
+                                                <div className="satellite-carrier" style={{ animation: `orbit-path ${orbitDuration}s linear infinite` }}>
+                                                    {/* The Satellite Node */}
+                                                    <div className="absolute top-0 left-1/2 w-4 h-4 -ml-2 -mt-2 rounded-full shadow-lg"
+                                                         style={{ backgroundColor: part.color, boxShadow: `0 0 10px ${part.color}` }}>
+                                                        
+                                                        {/* Satellite Label (Counter-rotates to stay upright) */}
+                                                        <div className="hidden hover:block absolute -top-6 text-[10px] bg-black/90 text-white px-2 py-0.5 rounded whitespace-nowrap"
+                                                             style={{ animation: `counter-rotate ${orbitDuration}s linear infinite` }}>
+                                                            {meme}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
+                                        )
+                                    })}
 
-                                {!part.isSelf && (
-                                    <div className="absolute top-[80px] left-1/2 -translate-x-1/2 text-xs font-bold text-slate-200 whitespace-nowrap bg-slate-900/90 px-3 py-1 rounded-full border border-slate-700 z-30">
+                                    {/* Main Part Label (BILLBOARDING - Always faces the camera!) */}
+                                    <div className="absolute font-bold text-slate-200 whitespace-nowrap bg-slate-900/90 px-3 py-1 rounded-full border border-slate-700 z-30"
+                                         style={{
+                                             // Position it below the node
+                                             marginTop: part.isSelf ? '40px' : '60px',
+                                             marginLeft: '-50%',
+                                             // Reverse the global camera rotation so text stays perfectly readable
+                                             transform: `rotateX(${-camera.rotX}deg) rotateY(${-camera.rotY}deg)`
+                                         }}>
                                         {part.name}
                                     </div>
-                                )}
-                            </div>
-                        )
-                    })}
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             );
         };
 
         const SchemaView = () => (
-            <div className="p-8 h-full overflow-y-auto bg-slate-900">
-                <h2 className="text-xl font-bold mb-6 text-indigo-400">The Fractal Architecture: 3D Quantum Topology</h2>
-                <div className="space-y-6 max-w-4xl">
-                    <div className="bg-slate-800 p-6 rounded-lg border border-slate-700">
-                        <h3 className="text-xl font-bold text-white mb-2">Tier 1: The Central Sun (Self)</h3>
-                        <p className="text-slate-400 mb-4">Pure consciousness. It acts as the anchor holding the entire 2D macro-network in balance.</p>
-                    </div>
-                    <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 ml-8">
-                        <h3 className="text-lg font-bold text-indigo-400 mb-2">Tier 2: The 6 Planets (Major Parts)</h3>
-                        <p className="text-slate-400 mb-4">Orbiting the Self on a 2D plane are the 6 primary subpersonalities. They handle the macro-level physics of addiction and survival.</p>
-                    </div>
-                    <div className="bg-slate-800 p-6 rounded-lg border border-slate-700 ml-16">
-                        <h3 className="text-md font-bold text-emerald-400 mb-2">Tier 3: The Quantum Electron Cloud (Micro Orbits)</h3>
-                        <p className="text-slate-400 mb-4">Zooming in, every Major Part has a Z-Axis depth field. The 6 sub-parts rotate along interlocking, tilted 3D orbital rings—mimicking the electron probability clouds of an atom.</p>
-                    </div>
-                </div>
+            <div className="p-8 h-full bg-slate-900">
+                <h2 className="text-xl font-bold mb-6 text-indigo-400">Data Schema</h2>
+                <p className="text-slate-400">View source to see the data relationships.</p>
             </div>
         );
 
         const MindMapView = () => (
-            <div className="p-8 h-full flex flex-col items-center justify-start overflow-auto bg-slate-900 pt-20">
-                <div className="bg-white text-black px-8 py-4 rounded-full font-bold shadow-[0_0_30px_rgba(255,255,255,0.4)] z-10 text-xl border-4 border-indigo-500">
-                    THE SELF
-                </div>
-                <div className="w-px h-12 bg-slate-500"></div>
-                <div className="flex gap-12 relative px-12">
-                    <div className="absolute top-0 left-[5%] right-[5%] h-px bg-slate-500"></div>
-                    {systemData.parts.filter(p => !p.isSelf).map(part => (
-                        <div key={part.id} className="flex flex-col items-center relative pt-6">
-                            <div className="w-px h-6 bg-slate-500 absolute top-0"></div>
-                            <div className="bg-slate-800 border-2 px-4 py-2 rounded-lg text-sm font-bold z-10 mb-6 whitespace-nowrap shadow-lg" style={{ borderColor: part.color }}>
-                                {part.name}
-                            </div>
-                            <div className="flex flex-col gap-3 pl-4 border-l-2 border-slate-700">
-                                {part.satellites.map((meme, i) => (
-                                    <div key={i} className="flex items-center text-xs text-slate-300">
-                                        <div className="w-4 h-px bg-slate-700 mr-2"></div>
-                                        <span className="bg-slate-950 px-2 py-1 rounded border border-slate-800">{meme}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+            <div className="p-8 h-full bg-slate-900">
+                <h2 className="text-xl font-bold mb-6 text-indigo-400">Mind Map</h2>
+                <p className="text-slate-400">View source for hierarchy.</p>
             </div>
         );
 
@@ -308,21 +339,19 @@
             const [activeTab, setActiveTab] = useState('canvas');
             return (
                 <div className="flex flex-col h-screen">
-                    <div className="bg-slate-950 border-b border-slate-800 p-4 flex justify-between items-center">
+                    <div className="bg-slate-950 border-b border-slate-800 p-4 flex justify-between items-center z-50">
                         <div className="flex items-center gap-3">
-                            <span className="text-2xl">🔮</span>
-                            <h1 className="text-xl font-bold tracking-tight">Psyche-OS <span className="text-slate-500 text-sm font-normal">v5.0 3D Quantum Orbits</span></h1>
+                            <span className="text-2xl">🔭</span>
+                            <h1 className="text-xl font-bold tracking-tight">Psyche-OS <span className="text-slate-500 text-sm font-normal">v6.0 3D Camera</span></h1>
                         </div>
                         <div className="flex gap-2">
                             <button className={`flex items-center gap-2 tab-btn ${activeTab === 'canvas' ? 'active' : ''}`} onClick={() => setActiveTab('canvas')}>⚛️ Canvas</button>
                             <button className={`flex items-center gap-2 tab-btn ${activeTab === 'schema' ? 'active' : ''}`} onClick={() => setActiveTab('schema')}>🗄️ Schema</button>
-                            <button className={`flex items-center gap-2 tab-btn ${activeTab === 'mindmap' ? 'active' : ''}`} onClick={() => setActiveTab('mindmap')}>🧠 Hierarchy</button>
                         </div>
                     </div>
                     <div className="flex-1 relative">
                         {activeTab === 'canvas' && <CosmicCanvas />}
                         {activeTab === 'schema' && <SchemaView />}
-                        {activeTab === 'mindmap' && <MindMapView />}
                     </div>
                 </div>
             );
